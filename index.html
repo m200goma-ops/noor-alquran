@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صلى على النبي - القرآن الكريم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Cairo', sans-serif; background-color: #f4f7f6; color: #2c3e50; line-height: 1.6; }
+        .header { background: linear-gradient(135deg, #1b5e20, #2e7d32); color: white; text-align: center; padding: 30px 15px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); }
+        .designer-tag { color: #ffd54f; font-size: 1.3rem; font-weight: bold; margin-bottom: 10px; display: block; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; width: fit-content; margin-left: auto; margin-right: auto; }
+        .header h1 { font-size: 2.2rem; margin-bottom: 15px; }
+        .salawat-box { background: rgba(255, 255, 255, 0.15); display: inline-block; padding: 15px 25px; border-radius: 12px; }
+        .salawat-box #counter { font-size: 2rem; font-weight: bold; color: #ffd54f; display: block; margin: 5px 0; }
+        #salawat-btn { background-color: #ffd54f; color: #1b5e20; border: none; padding: 10px 20px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: transform 0.1s, background-color 0.2s; }
+        #salawat-btn:active { transform: scale(0.95); }
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+        .controls { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); margin-bottom: 20px; text-align: center; }
+        .controls label { font-size: 1.2rem; font-weight: bold; margin-left: 10px; }
+        .controls select { padding: 10px 15px; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; outline: none; cursor: pointer; max-width:100%; }
+        .audio-container { margin-bottom: 20px; }
+        .quran-text { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); font-family: 'Amiri', serif; font-size: 1.6rem; line-height: 2.5; text-align: justify; direction: rtl; overflow-wrap:anywhere; }
+        .ayah-num { color: #2e7d32; font-size: 1.1rem; font-weight: bold; margin: 0 5px; }
+        .placeholder { text-align: center; color: #888; font-family: 'Cairo', sans-serif; font-size: 1.2rem; }
+        .footer { background-color: #1b5e20; color: #ffffff; text-align: center; padding: 20px 10px; margin-top: 50px; font-size: 1.1rem; }
+        .footer span { color: #ffd54f; font-weight: bold; }
+        @media(max-width:600px){.header h1{font-size:1.7rem}.designer-tag{font-size:1rem}.quran-text{padding:18px;font-size:1.35rem}.controls label{display:block;margin-bottom:8px}}
+    </style>
+</head>
+<body>
+    <header class="header">
+        <span class="designer-tag">✨ تصميم: المصمم محمد سعيد ابراهيم فرج ✨</span>
+        <h1>ﷺ صلى على محمد ﷺ</h1>
+        <div class="salawat-box">
+            <p>عدد الصلاة على النبي في هذه الجلسة:</p>
+            <span id="counter">0</span>
+            <button id="salawat-btn" onclick="addSalawat()">صَلِّ على النبي الآن</button>
+        </div>
+    </header>
+    <main class="container">
+        <section class="controls">
+            <label for="surah-select">اختر السورة:</label>
+            <select id="surah-select" onchange="loadSurah()">
+                <option value="">جاري تحميل السور...</option>
+            </select>
+        </section>
+        <section class="audio-container">
+            <audio id="audio-player" controls style="display:none; width:100%;"></audio>
+        </section>
+        <section id="quran-display" class="quran-text">
+            <p class="placeholder">اختر سورة لقراءتها واستماعها</p>
+        </section>
+    </main>
+    <footer class="footer">
+        <p>تم التصميم والتطوير بواسطة <span>المصمم محمد سعيد ابراهيم فرج</span></p>
+    </footer>
+    <script>
+        const API_URL = "https://api.alquran.cloud/v1";
+        document.addEventListener("DOMContentLoaded", fetchSurahs);
+        async function fetchSurahs() {
+            const select = document.getElementById("surah-select");
+            try {
+                const response = await fetch(`${API_URL}/surah`);
+                if (!response.ok) throw new Error("تعذر الاتصال بمصدر القرآن");
+                const data = await response.json();
+                select.innerHTML = '<option value="">-- اختر سورة --</option>';
+                data.data.forEach(surah => {
+                    const option = document.createElement("option");
+                    option.value = surah.number;
+                    option.textContent = `${surah.number}. ${surah.name} (${surah.englishNameTranslation})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                select.innerHTML = '<option value="">تعذر تحميل السور - تحقق من الإنترنت</option>';
+            }
+        }
+        async function loadSurah() {
+            const surahNumber = document.getElementById("surah-select").value;
+            const quranDisplay = document.getElementById("quran-display");
+            const audioPlayer = document.getElementById("audio-player");
+            if (!surahNumber) return;
+            quranDisplay.innerHTML = "<p class='placeholder'>جاري تحميل الآيات والتلاوة...</p>";
+            try {
+                const responseText = await fetch(`${API_URL}/surah/${surahNumber}`);
+                if (!responseText.ok) throw new Error("تعذر تحميل السورة");
+                const dataText = await responseText.json();
+                let surahHTML = "";
+                dataText.data.ayahs.forEach(ayah => {
+                    surahHTML += `${ayah.text} <span class="ayah-num">﴿${ayah.numberInSurah}﴾</span> `;
+                });
+                quranDisplay.innerHTML = surahHTML;
+                const paddedNumber = String(surahNumber).padStart(3, '0');
+                const audioUrl = `https://server8.mp3quran.net/afs/${paddedNumber}.mp3`;
+                audioPlayer.src = audioUrl;
+                audioPlayer.style.display = "block";
+                audioPlayer.load();
+                // لا يبدأ الصوت تلقائيًا؛ اضغط تشغيل من مشغل الصوت.
+            } catch (error) {
+                quranDisplay.innerHTML = "<p class='placeholder'>حدث خطأ أثناء جلب البيانات، حاول مرة أخرى.</p>";
+            }
+        }
+        let count = 0;
+        function addSalawat() {
+            count++;
+            document.getElementById("counter").textContent = count;
+        }
+    </script>
+</body>
+</html>
